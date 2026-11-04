@@ -11,9 +11,11 @@ from pathlib import Path
 # ``python app/main.py``.
 try:
     from app.email.mime_parser import parse_eml
+    from app.urls.url_parser import extract_url
 except ModuleNotFoundError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from app.email.mime_parser import parse_eml
+    from app.urls.url_parser import extract_url
 
 
 def select_eml_file() -> Path | None:
@@ -44,8 +46,19 @@ def main() -> None:
         print(f"Could not parse {eml_path}: {error}")
         return
 
-    # Test that mime_parser works by printing out the result.
-    print(mime_parts)
+    # print(f"MIME parts: {len(mime_parts)}")
+
+    urls: list[str] = []
+    for part in mime_parts:
+        print(part["content_type"])
+        if part["content_type"].lower() != "text/html":
+            continue
+
+        url = extract_url(part)
+        if url is not None:
+            urls.append(url)
+
+    print(f"URLs found: {urls}")
 
 
 if __name__ == "__main__":
