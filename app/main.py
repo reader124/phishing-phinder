@@ -11,11 +11,15 @@ from pathlib import Path
 # ``python app/main.py``.
 try:
     from app.email.mime_parser import parse_eml
+    from app.images.identify_qr_code import identify_qr_code
+    from app.images.image_parser import extract_image
     from app.urls.check_url_safety import check_url_safety
     from app.urls.url_parser import extract_url
 except ModuleNotFoundError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from app.email.mime_parser import parse_eml
+    from app.images.identify_qr_code import identify_qr_code
+    from app.images.image_parser import extract_image
     from app.urls.check_url_safety import check_url_safety
     from app.urls.url_parser import extract_url
 
@@ -53,18 +57,24 @@ def main() -> None:
     urls: list[str] = []
     for part in mime_parts:
         # print(part["content_type"])
-        if part["content_type"].lower() != "text/html":
-            continue
 
-        url = extract_url(part)
-        if url is not None:
-            urls.append(url)
+        if part["content_type"].lower() == "text/html":
+            url = extract_url(part)
+            if url is not None:
+                urls.append(url)
+
+        elif part["content_type"].lower().startswith("image/"):
+            image = extract_image(part)
+            if image is not None:
+                is_qr_code = identify_qr_code(image)
+                image_name = part.get("filename") or "Image"
+                print(f"{image_name} is a QR code: {is_qr_code}")
 
     # print(urls)
 
-    url_check_result = check_url_safety(urls)
+    # url_check_result = check_url_safety(urls)
     
-    print(url_check_result)
+    # print(url_check_result)
 
 
 if __name__ == "__main__":
