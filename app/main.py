@@ -13,6 +13,7 @@ try:
     from app.email.mime_parser import parse_eml
     from app.images.identify_qr_code import identify_qr_code
     from app.images.image_parser import extract_image
+    from app.images.qr_to_url import qr_to_url
     from app.urls.check_url_safety import check_url_safety
     from app.urls.url_parser import extract_url
 except ModuleNotFoundError:
@@ -20,6 +21,7 @@ except ModuleNotFoundError:
     from app.email.mime_parser import parse_eml
     from app.images.identify_qr_code import identify_qr_code
     from app.images.image_parser import extract_image
+    from app.images.qr_to_url import qr_to_url
     from app.urls.check_url_safety import check_url_safety
     from app.urls.url_parser import extract_url
 
@@ -67,14 +69,16 @@ def main() -> None:
             image = extract_image(part)
             if image is not None:
                 is_qr_code = identify_qr_code(image)
-                image_name = part.get("filename") or "Image"
-                print(f"{image_name} is a QR code: {is_qr_code}")
+                if is_qr_code:
+                    url = qr_to_url(image)
+                    if url is not None:
+                        urls.append(url)
 
-    # print(urls)
+    print(urls)
 
-    # url_check_result = check_url_safety(urls)
+    url_check_result = check_url_safety(urls)
     
-    # print(url_check_result)
+    print(url_check_result)
 
 
 if __name__ == "__main__":
